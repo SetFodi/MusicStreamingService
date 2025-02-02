@@ -1,16 +1,23 @@
+// components/PlayerControls.js
 import React, { useState, useEffect, useRef } from 'react';
 import ReactHowler from 'react-howler';
-import { FaPlay, FaPause, FaStepBackward, FaStepForward, FaVolumeUp } from 'react-icons/fa';
+import {
+  FaPlay,
+  FaPause,
+  FaStepBackward,
+  FaStepForward,
+  FaVolumeUp,
+} from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 export default function PlayerControls({ trackList }) {
-  // If no track list is provided via props, use a default list:
+  // Default track list if none provided via props:
   const defaultTracks = [
     {
       title: "Baby I'm Back",
       artist: 'The Kid LAROI',
       filePath: '/music/sample1.mp3',
-      albumArt: '/images/babyImBack.png',
+      albumArt: '/images/babyimback.jpg',
     },
     {
       title: 'Sucker',
@@ -22,37 +29,41 @@ export default function PlayerControls({ trackList }) {
       title: 'Lose Yourself',
       artist: 'Eminem',
       filePath: '/music/sample3.mp3',
-      albumArt: '/images/loseYourself.png',
+      albumArt: '/images/loseyourself.jpg',
     },
     {
       title: 'You and I',
       artist: 'One Direction',
       filePath: '/music/sample4.mp3',
-      albumArt: '/images/youAndI.png',
+      albumArt: '/images/youandi.png',
     },
     {
       title: 'Cake by the Ocean',
       artist: 'DNCE',
       filePath: '/music/sample5.mp3',
-      albumArt: '/images/cakeByTheOcean.png',
+      albumArt: '/images/cakebytheocean.jpg',
+    },
+    {
+      title: 'Strangers',
+      artist: 'Kenya Grace',
+      filePath: '/music/sample6.mp3',
+      albumArt: '/images/strangers.png',
     },
   ];
 
   const tracks = trackList && trackList.length > 0 ? trackList : defaultTracks;
 
-  // State for playback, volume, progress, and current track index
+  // Player states
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(1); // 0 to 1
+  const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const playerRef = useRef(null);
   const progressIntervalRef = useRef(null);
 
-  // Get the current track from the list
   const currentTrack = tracks[currentTrackIndex];
 
-  // Update the progress every second while playing
   useEffect(() => {
     if (playing) {
       progressIntervalRef.current = setInterval(() => {
@@ -66,7 +77,6 @@ export default function PlayerControls({ trackList }) {
     return () => clearInterval(progressIntervalRef.current);
   }, [playing]);
 
-  // Function to handle seeking via the progress bar
   const handleSeek = (e) => {
     const newTime = parseFloat(e.target.value);
     if (playerRef.current) {
@@ -75,85 +85,81 @@ export default function PlayerControls({ trackList }) {
     }
   };
 
-  // Function to switch to the previous track
   const handlePrev = () => {
     setProgress(0);
     setPlaying(false);
-    setCurrentTrackIndex((prevIndex) =>
-      prevIndex === 0 ? tracks.length - 1 : prevIndex - 1
+    setCurrentTrackIndex((prev) =>
+      prev === 0 ? tracks.length - 1 : prev - 1
     );
   };
 
-  // Function to switch to the next track
   const handleNext = () => {
     setProgress(0);
     setPlaying(false);
-    setCurrentTrackIndex((prevIndex) =>
-      prevIndex === tracks.length - 1 ? 0 : prevIndex + 1
+    setCurrentTrackIndex((prev) =>
+      prev === tracks.length - 1 ? 0 : prev + 1
     );
   };
 
-  // When a track ends, automatically play the next one
   const onEnd = () => {
     handleNext();
-    // Optionally, set playing to true to auto-start the next track:
     setPlaying(true);
   };
 
   return (
     <motion.div
-      className="fixed bottom-0 left-0 w-full bg-gradient-to-r from-gray-800 to-gray-700 bg-opacity-90 backdrop-blur-md p-4 flex flex-col shadow-2xl z-50"
+      className="fixed bottom-0 left-0 w-full bg-white/10 backdrop-blur-md bg-gradient-to-r from-gray-900 to-gray-800 p-4 flex flex-col shadow-2xl z-50"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      {/* Track Info & Playback Controls */}
+      {/* Track Info & Controls */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <img
             src={currentTrack.albumArt}
             alt={currentTrack.title}
-            className="w-12 h-12 rounded-md shadow-md"
+            className="w-14 h-14 rounded-lg shadow-md"
           />
           <div>
-            <p className="text-white font-bold">{currentTrack.title}</p>
-            <p className="text-gray-400 text-sm">{currentTrack.artist}</p>
+            <p className="text-white font-bold text-lg">{currentTrack.title}</p>
+            <p className="text-gray-300 text-sm">{currentTrack.artist}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center gap-6">
           <FaStepBackward
             onClick={handlePrev}
-            className="text-gray-300 text-xl cursor-pointer hover:text-white transition-colors duration-200"
+            className="text-gray-300 text-2xl cursor-pointer hover:text-white transition"
           />
           <button
             onClick={() => setPlaying(!playing)}
-            className="bg-primary p-3 rounded-full text-black hover:bg-green-600 transition transform hover:scale-110"
+            className="bg-gradient-to-r from-green-400 to-blue-500 p-4 rounded-full text-black hover:scale-110 transition transform"
           >
             {playing ? (
-              <FaPause className="text-xl" />
+              <FaPause className="text-2xl" />
             ) : (
-              <FaPlay className="text-xl" />
+              <FaPlay className="text-2xl" />
             )}
           </button>
           <FaStepForward
             onClick={handleNext}
-            className="text-gray-300 text-xl cursor-pointer hover:text-white transition-colors duration-200"
+            className="text-gray-300 text-2xl cursor-pointer hover:text-white transition"
           />
         </div>
       </div>
 
       {/* Progress Bar */}
       <div className="flex items-center mt-4">
-        <span className="text-gray-300 text-xs mr-2">{formatTime(progress)}</span>
+        <span className="text-gray-300 text-sm mr-2">{formatTime(progress)}</span>
         <input
           type="range"
           min={0}
           max={duration || 0}
           value={progress}
           onChange={handleSeek}
-          className="flex-1 h-2 rounded-lg bg-gray-600 accent-green-500 cursor-pointer"
+          className="flex-1 h-2 rounded-full bg-gray-600 accent-blue-500 cursor-pointer"
         />
-        <span className="text-gray-300 text-xs ml-2">{formatTime(duration)}</span>
+        <span className="text-gray-300 text-sm ml-2">{formatTime(duration)}</span>
       </div>
 
       {/* Volume Control */}
@@ -166,11 +172,10 @@ export default function PlayerControls({ trackList }) {
           step={0.01}
           value={volume}
           onChange={(e) => setVolume(parseFloat(e.target.value))}
-          className="w-32 h-2 rounded-lg bg-gray-600 accent-green-500 cursor-pointer"
+          className="w-28 h-2 rounded-full bg-gray-600 accent-blue-500 cursor-pointer"
         />
       </div>
 
-      {/* ReactHowler Component for Audio Playback */}
       <ReactHowler
         src={currentTrack.filePath}
         playing={playing}
@@ -187,12 +192,10 @@ export default function PlayerControls({ trackList }) {
   );
 }
 
-// Helper function to format seconds into mm:ss
+// Helper to format seconds to mm:ss
 function formatTime(secs) {
   if (!secs || isNaN(secs)) return '00:00';
   const minutes = Math.floor(secs / 60);
   const seconds = Math.floor(secs % 60);
-  return `${minutes < 10 ? '0' + minutes : minutes}:${
-    seconds < 10 ? '0' + seconds : seconds
-  }`;
+  return `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
 }
