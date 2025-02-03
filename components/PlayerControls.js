@@ -1,4 +1,3 @@
-// components/PlayerControls.js
 import React, { useState, useEffect, useRef } from 'react';
 import ReactHowler from 'react-howler';
 import {
@@ -9,61 +8,31 @@ import {
   FaVolumeUp,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { usePlayer } from '../context/PlayerContext';
 
-export default function PlayerControls({ trackList }) {
-  // Default track list if none provided via props:
-  const defaultTracks = [
-    {
-      title: "Baby I'm Back",
-      artist: 'The Kid LAROI',
-      filePath: '/music/sample1.mp3',
-      albumArt: '/images/babyimback.jpg',
-    },
-    {
-      title: 'Sucker',
-      artist: 'Jonas Brothers',
-      filePath: '/music/sample2.mp3',
-      albumArt: '/images/sucker.png',
-    },
-    {
-      title: 'Lose Yourself',
-      artist: 'Eminem',
-      filePath: '/music/sample3.mp3',
-      albumArt: '/images/loseyourself.jpg',
-    },
-    {
-      title: 'You and I',
-      artist: 'One Direction',
-      filePath: '/music/sample4.mp3',
-      albumArt: '/images/youandi.png',
-    },
-    {
-      title: 'Cake by the Ocean',
-      artist: 'DNCE',
-      filePath: '/music/sample5.mp3',
-      albumArt: '/images/cakebytheocean.jpg',
-    },
-    {
-      title: 'Strangers',
-      artist: 'Kenya Grace',
-      filePath: '/music/sample6.mp3',
-      albumArt: '/images/strangers.png',
-    },
-  ];
+export default function PlayerControls() {
+  // Get global player state and functions from context
+  const {
+    trackList,
+    currentTrackIndex,
+    playing,
+    setPlaying,
+    nextTrack,
+    prevTrack,
+  } = usePlayer();
 
-  const tracks = trackList && trackList.length > 0 ? trackList : defaultTracks;
-
-  // Player states
-  const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
+  // Local state for volume, progress, and duration
+  const [volume, setVolume] = useState(1); // value between 0 and 1
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+
   const playerRef = useRef(null);
   const progressIntervalRef = useRef(null);
 
-  const currentTrack = tracks[currentTrackIndex];
+  // Determine the current track
+  const currentTrack = trackList[currentTrackIndex] || null;
 
+  // Update progress every second when playing
   useEffect(() => {
     if (playing) {
       progressIntervalRef.current = setInterval(() => {
@@ -77,6 +46,14 @@ export default function PlayerControls({ trackList }) {
     return () => clearInterval(progressIntervalRef.current);
   }, [playing]);
 
+  // Update Howler volume when `volume` state changes.
+  useEffect(() => {
+    if (playerRef.current && playerRef.current.howler) {
+      playerRef.current.howler.volume(volume);
+    }
+    console.log("Volume updated:", volume);
+  }, [volume]);
+
   const handleSeek = (e) => {
     const newTime = parseFloat(e.target.value);
     if (playerRef.current) {
@@ -85,26 +62,12 @@ export default function PlayerControls({ trackList }) {
     }
   };
 
-  const handlePrev = () => {
-    setProgress(0);
-    setPlaying(false);
-    setCurrentTrackIndex((prev) =>
-      prev === 0 ? tracks.length - 1 : prev - 1
-    );
-  };
-
-  const handleNext = () => {
-    setProgress(0);
-    setPlaying(false);
-    setCurrentTrackIndex((prev) =>
-      prev === tracks.length - 1 ? 0 : prev + 1
-    );
-  };
-
   const onEnd = () => {
-    handleNext();
-    setPlaying(true);
+    nextTrack();
   };
+
+  // If no track is selected, don't render the player.
+  if (!currentTrack) return null;
 
   return (
     <motion.div
@@ -113,7 +76,7 @@ export default function PlayerControls({ trackList }) {
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      {/* Track Info & Controls */}
+      {/* Track Info & Playback Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img
@@ -122,13 +85,17 @@ export default function PlayerControls({ trackList }) {
             className="w-14 h-14 rounded-lg shadow-md"
           />
           <div>
-            <p className="text-white font-bold text-lg">{currentTrack.title}</p>
-            <p className="text-gray-300 text-sm">{currentTrack.artist}</p>
+            <p className="text-white font-bold text-lg">
+              {currentTrack.title}
+            </p>
+            <p className="text-gray-300 text-sm">
+              {currentTrack.artist}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-6">
           <FaStepBackward
-            onClick={handlePrev}
+            onClick={prevTrack}
             className="text-gray-300 text-2xl cursor-pointer hover:text-white transition"
           />
           <button
@@ -142,7 +109,7 @@ export default function PlayerControls({ trackList }) {
             )}
           </button>
           <FaStepForward
-            onClick={handleNext}
+            onClick={nextTrack}
             className="text-gray-300 text-2xl cursor-pointer hover:text-white transition"
           />
         </div>
@@ -171,7 +138,10 @@ export default function PlayerControls({ trackList }) {
           max={1}
           step={0.01}
           value={volume}
-          onChange={(e) => setVolume(parseFloat(e.target.value))}
+          onChange={(e) => {
+            const newVolume = parseFloat(e.target.value);
+            setVolume(newVolume);
+          }}
           className="w-28 h-2 rounded-full bg-gray-600 accent-blue-500 cursor-pointer"
         />
       </div>
@@ -192,7 +162,6 @@ export default function PlayerControls({ trackList }) {
   );
 }
 
-// Helper to format seconds to mm:ss
 function formatTime(secs) {
   if (!secs || isNaN(secs)) return '00:00';
   const minutes = Math.floor(secs / 60);

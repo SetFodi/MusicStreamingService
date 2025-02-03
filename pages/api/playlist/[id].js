@@ -10,7 +10,6 @@ export default async function handler(req, res) {
     try {
       let playlist;
       if (id === 'default') {
-        // Use customId instead of _id
         playlist = await Playlist.findOne({ customId: 'default' }).populate('tracks');
       } else {
         playlist = await Playlist.findById(id).populate('tracks');
@@ -29,7 +28,6 @@ export default async function handler(req, res) {
       } else {
         playlist = await Playlist.findById(id).populate('tracks');
       }
-      // If the playlist doesn't exist, create it.
       if (!playlist) {
         if (id === 'default') {
           playlist = new Playlist({ customId: 'default', name: 'My Playlist', tracks: [] });
@@ -39,7 +37,6 @@ export default async function handler(req, res) {
       }
       const { track, name, tracks: newTracks } = req.body;
       if (track) {
-        // Add the track if it doesn't already exist.
         const exists = playlist.tracks.some(
           (t) => t._id.toString() === track._id.toString()
         );
@@ -51,7 +48,6 @@ export default async function handler(req, res) {
         if (newTracks) playlist.tracks = newTracks;
       }
       const updated = await playlist.save();
-      // Populate tracks before sending back the response.
       await updated.populate('tracks');
       return res.status(200).json(updated);
     } catch (err) {

@@ -2,10 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaPlay } from 'react-icons/fa';
+import AddToPlaylistModal from '../components/AddToPlaylistModal';
+import { usePlayer } from '../context/PlayerContext';
 
 export default function Library() {
   const [tracks, setTracks] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState(null);
+  const { playTrack } = usePlayer();
 
   useEffect(() => {
     fetch('/api/tracks')
@@ -14,22 +19,9 @@ export default function Library() {
       .catch((err) => console.error(err));
   }, []);
 
-  const addTrackToPersistentPlaylist = async (track) => {
-    try {
-      const response = await fetch(`/api/playlist/default`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ track }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log(`Added ${track.title} to playlist`, data);
-      } else {
-        console.error('Error adding track:', data.error);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
+  const openModal = (track) => {
+    setSelectedTrack(track);
+    setModalOpen(true);
   };
 
   return (
@@ -57,21 +49,42 @@ export default function Library() {
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-white">{track.title}</h3>
+                <h3 className="text-xl font-bold text-white">
+                  {track.title}
+                </h3>
                 <p className="text-gray-300 text-sm">{track.artist}</p>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                className="mt-4 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-blue-500 text-black px-4 py-2 rounded-full font-semibold transition-all"
-                onClick={() => addTrackToPersistentPlaylist(track)}
-              >
-                <FaPlus />
-                <span>Add</span>
-              </motion.button>
+              <div className="flex justify-between mt-4">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-green-400 to-blue-500 text-black px-4 py-2 rounded-full font-semibold transition-all"
+                  onClick={() => openModal(track)}
+                >
+                  <FaPlus />
+                  <span>Add</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-300 to-orange-400 text-black px-4 py-2 rounded-full font-semibold transition-all"
+                  onClick={() => playTrack(track, tracks)}
+                >
+                  <FaPlay />
+                  <span>Play</span>
+                </motion.button>
+              </div>
             </motion.div>
           ))}
         </div>
       </div>
+      {modalOpen && selectedTrack && (
+        <AddToPlaylistModal
+          track={selectedTrack}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedTrack(null);
+          }}
+        />
+      )}
     </Layout>
   );
 }
