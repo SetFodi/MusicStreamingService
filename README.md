@@ -1,3 +1,6 @@
+
+![musicstreamingservice](https://github.com/user-attachments/assets/ddcba625-7b2a-4ab2-a9a1-b14bf0b1b5d4)
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
